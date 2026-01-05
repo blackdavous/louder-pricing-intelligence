@@ -1,0 +1,111 @@
+version: '3.8'
+
+services:
+  # PostgreSQL con pgvector
+  postgres:
+    image: ankane/pgvector:latest
+    container_name: louder_postgres
+    environment:
+      POSTGRES_USER: louder_user
+      POSTGRES_PASSWORD: louder_password
+      POSTGRES_DB: louder_pricing
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U louder_user"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Redis para cache y queue
+  redis:
+    image: redis:7-alpine
+    container_name: louder_redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
+  # FastAPI Backend
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: louder_backend
+    environment:
+      - DATABASE_URL=postgresql://louder_user:louder_password@postgres:5432/louder_pricing
+      - REDIS_URL=redis://redis:6379/0
+      - DEBUG=true
+    ports:
+      - "8000:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - ./backend:/app
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+
+  # Celery Worker
+  celery_worker:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: louder_celery_worker
+    environment:
+      - DATABASE_URL=postgresql://louder_user:louder_password@postgres:5432/louder_pricing
+      - REDIS_URL=redis://redis:6379/0
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://redis:6379/0
+    depends_on:
+      - postgres
+      - redis
+    volumes:
+      - ./backend:/app
+    command: celery -A app.tasks.celery_app worker --loglevel=info
+
+  # Celery Beat (Scheduler)
+  celery_beat:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: louder_celery_beat
+    environment:
+      - DATABASE_URL=postgresql://louder_user:louder_password@postgres:5432/louder_pricing
+      - REDIS_URL=redis://redis:6379/0
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://redis:6379/0
+    depends_on:
+      - postgres
+      - redis
+    volumes:
+      - ./backend:/app
+    command: celery -A app.tasks.celery_app beat --loglevel=info
+
+  # Streamlit Frontend
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: louder_frontend
+    environment:
+      - BACKEND_URL=http://backend:8000
+    ports:
+      - "8501:8501"
+    depends_on:
+      - backend
+    volumes:
+      - ./frontend:/app
+    command: streamlit run app.py --server.port=8501 --server.address=0.0.0.0
+
+volumes:
+  postgres_data:
+  redis_data:
