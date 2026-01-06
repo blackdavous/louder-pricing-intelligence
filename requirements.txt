@@ -1,5 +1,5 @@
 # ==============================================
-# LOUDER - Python Dependencies
+# LOUDER - Python Dependencies (CORREGIDO)
 # ==============================================
 
 # Web Framework
@@ -21,16 +21,16 @@ hiredis==2.3.2
 celery[redis]==5.3.6
 flower==2.0.1
 
-# OpenAI & LangChain
+# OpenAI & LangChain (Versiones antiguas fijas para compatibilidad)
 openai==1.10.0
-langchain
-langchain-community
-langchain-openai
-langchain-core
+langchain==0.1.4
+langchain-community==0.0.16
+langchain-openai==0.0.5
+langchain-core==0.1.17
 langgraph==0.0.20
 langsmith==0.0.83
 
-# MCP (Model Context Protocol)
+# MCP (El unico que dejamos flexible para que no falle la instalacion)
 mcp>=0.9.1
 
 # HTTP Client
@@ -70,7 +70,6 @@ colorlog==6.8.2
 pytest==8.0.0
 pytest-asyncio==0.23.3
 pytest-cov==4.1.0
-httpx==0.26.0
 faker==22.6.0
 
 # Development
@@ -84,6 +83,6 @@ pre-commit==3.6.0
 types-redis==4.6.0.20240106
 types-requests==2.31.0.20240106
 
-# ML & Analytics (optional, for future features)
+# ML & Analytics
 scikit-learn==1.4.0
 scipy==1.12.0
