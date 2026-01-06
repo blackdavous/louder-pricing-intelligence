@@ -110,10 +110,10 @@ def run_analysis_locally(product_name: str, cost: float, margin: float) -> Dict[
                     "reasoning": recommendation.reasoning,
                     "statistics": {
                         "sample_size": len(competitor_prices),
-                        "min_price": stats.min,
-                        "median_price": stats.median,
-                        "mean_price": stats.mean,
-                        "max_price": stats.max,
+                        "min_price": stats.min_price,
+                        "median_price": stats.median_price,
+                        "mean_price": stats.mean_price,
+                        "max_price": stats.max_price,
                         "std_dev": stats.std_dev
                     },
                     "competitors_analyzed": len(competitors)
