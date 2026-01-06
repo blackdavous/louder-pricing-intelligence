@@ -30,7 +30,7 @@ langgraph==0.0.20
 langsmith==0.0.83
 
 # MCP (Model Context Protocol)
-mcp==0.9.0
+mcp>=0.9.1
 
 # HTTP Client
 httpx==0.26.0
